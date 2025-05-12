@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>User Profile</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>    <h1>User Profile</h1>
+    <div class="profile-container">
+        <div class="profile-picture-container">
+            <img id="profilePicture" src="/uploads/avatar.png" alt="Profile Picture" class="profile-picture">
+            <div class="upload-overlay">
+                <label for="imageUpload" class="upload-button">
+                    <span class="upload-icon">📷</span>
+                </label>
+                <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+            </div>
+        </div>
+        <div id="profileInfo">
+            <p><label>Username:</label> <span id="username">Loading...</span></p>
+            <p><label>Email:</label> <span id="email">Loading...</span></p>
+            <p><label>Region:</label> <span id="region">Loading...</span></p>
+        </div>    </div>    <div class="button-container">
+        <button id="logoutBtn" onclick="logout()">Logout</button>
+        <button id="homeBtn" onclick="window.location.href='home.html'">To Dino Game</button>
+    </div>
+    <div id="responseMessage"></div>
+    <script src="script.js"></script>
+</body>
+</html>

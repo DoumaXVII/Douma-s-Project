@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Register</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <h1>User Registration</h1>
+    <form id="registrationForm">
+        <label for="name">Username:</label>
+        <input type="text" id="name" name="name" required />
+        
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required />
+        
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required />
+        
+        <label for="region">Region:</label>
+        <input type="text" id="region" name="region" required />
+          <button type="submit">Register</button>
+    </form>
+    <button id="toLoginBtn">Back to Login</button>
+    <div id="responseMessage"></div>
+  <script src="script.js"></script>
+  <script>
+    document.getElementById('toLoginBtn').addEventListener('click', () => {
+      window.location.href = '/login.html';
+    });
+  </script>
+</body>
+</html>

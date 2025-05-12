@@ -1,0 +1,16 @@
+[
+  {
+    "username": "koko",
+    "email": "koko@gmail.com",
+    "password": "$2b$10$xEi50qBcY0ay3Yytdo.Nr.xZGFl5iaP6aoqflDcyz4X8e239Si9F6",
+    "region": "Turkey",
+    "profilePicture": "/uploads/profile-koko.jpg"
+  },
+  {
+    "username": "dodo",
+    "email": "dodo@gmail.com",
+    "password": "$2b$10$3AYQmnT0DQse977TDeY2lODyW/hHB5qoOkD.p6WmeuvoEHMRx9jLy",
+    "region": "Korea",
+    "profilePicture": "/uploads/avatar.png"
+  }
+]

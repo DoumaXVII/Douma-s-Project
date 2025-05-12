@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>T-Rex Runner Game</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #f7f7f7;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        #gameContainer {
+            position: relative;
+            width: 1000px;
+            height: 250px;
+            margin: 50px auto;
+            background-color: #fff;
+            border: 2px solid #333;
+            overflow: hidden;
+        }
+        #ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 20px;
+            background-color: #555;
+        }
+        #dino {
+            position: absolute;
+            bottom: 20px;
+            left: 50px;
+            width: 40px;
+            height: 40px;
+            background-color: gray;
+            border-radius: 0;
+            background-image: none;
+            /* Remove animation:none to allow jump animation */
+        }
+        #dino.jumping {
+            animation: jump 0.7s ease forwards;
+            background-image: none;
+            animation-play-state: running;
+        }
+        @keyframes jump {
+            0% { bottom: 20px; }
+            50% { bottom: 110px; }
+            100% { bottom: 20px; }
+        }
+        @keyframes runAnimation {
+            from { background-position: 0 0; }
+            to { background-position: -80px 0; }
+        }
+        .obstacle {
+            position: absolute;
+            bottom: 20px;
+            width: 15px;
+            height: 1px;
+            background-color: transparent;
+            border-left: 4.5px solid transparent;
+            border-right: 4.5px solid transparent;
+            border-bottom: 25px solid #333;
+            animation-timing-function: linear;
+            z-index: 10;
+        }
+        #score {
+            text-align: center;
+            font-size: 20px;
+            margin-top: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+        #bestScore {
+            text-align: center;
+            font-size: 20px;
+            margin-top: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 28px;
+            color: red;
+            display: none;
+        }
+        #restartBtn {
+            position: absolute;
+            top: 70%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px;
+            font-size: 16px;
+            cursor: pointer;
+            display: none;
+            background-color: #333;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="dino"></div>
+        <div id="ground"></div>
+        <div id="gameOver">Game Over! Press Space to Restart</div>
+        <button id="restartBtn">Restart</button>
+    </div>
+    <div id="score">Score: 0</div>
+    <div id="bestScore">Best Score: 0</div>
+    <div id="buttonsContainer" style="text-align:center; margin-top: 10px;">
+        <button id="logoutBtn" style="margin-right: 10px; padding: 6px 12px; font-size: 16px; cursor: pointer;">Logout</button>
+        <button id="backToProfileBtn" style="padding: 6px 12px; font-size: 16px; cursor: pointer;">Back to Profile</button>
+    </div>
+
+    <script>
+        const dino = document.getElementById('dino');
+        const gameContainer = document.getElementById('gameContainer');
+        const scoreDisplay = document.getElementById('score');
+        const bestScoreDisplay = document.getElementById('bestScore');
+        const gameOverDisplay = document.getElementById('gameOver');
+        const restartBtn = document.getElementById('restartBtn');
+
+        const logoutBtn = document.getElementById('logoutBtn');
+        const backToProfileBtn = document.getElementById('backToProfileBtn');
+
+        logoutBtn.addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+
+        backToProfileBtn.addEventListener('click', () => {
+            window.location.href = 'profile.html';
+        });
+
+        let isJumping = false;
+        let isGameOver = false;
+        let score = 0;
+        let bestScore = 0;
+        let obstacleInterval;
+        let scoreInterval;
+        let obstacles = [];
+        let obstacleSpeed = 5;
+
+        function jump() {
+            if (isJumping) return;
+            isJumping = true;
+            dino.classList.add('jumping');
+            dino.addEventListener('animationend', () => {
+                dino.classList.remove('jumping');
+                isJumping = false;
+            }, { once: true });
+        }
+
+        function createObstacle() {
+            if (isGameOver) return;
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            gameContainer.appendChild(obstacle);
+            obstacles.push(obstacle);
+
+            let obstacleRight = -20;
+            let animationFrameId;
+
+            function move() {
+                if (isGameOver) {
+                    cancelAnimationFrame(animationFrameId);
+                    return;
+                }
+                obstacleRight += obstacleSpeed;
+                obstacle.style.right = obstacleRight + 'px';
+
+                // Collision detection with smaller hitbox for obstacle
+                const dinoRect = dino.getBoundingClientRect();
+                const obstacleRect = obstacle.getBoundingClientRect();
+
+                // Shrink obstacle hitbox by 5px on each side horizontally and 5px from top vertically
+                const shrink = 5;
+                const obstacleHitbox = {
+                    left: obstacleRect.left + shrink,
+                    right: obstacleRect.right - shrink,
+                    top: obstacleRect.top + shrink,
+                    bottom: obstacleRect.bottom
+                };
+
+                if (
+                    dinoRect.left < obstacleHitbox.right &&
+                    dinoRect.right > obstacleHitbox.left &&
+                    dinoRect.top < obstacleHitbox.bottom &&
+                    dinoRect.bottom > obstacleHitbox.top
+                ) {
+                    endGame();
+                    return;
+                }
+
+                if (obstacleRight > gameContainer.clientWidth + 20) {
+                    gameContainer.removeChild(obstacle);
+                    obstacles = obstacles.filter(o => o !== obstacle);
+                    cancelAnimationFrame(animationFrameId);
+                    return;
+                }
+                animationFrameId = requestAnimationFrame(move);
+            }
+            animationFrameId = requestAnimationFrame(move);
+        }
+
+        function startGame() {
+            isGameOver = false;
+            score = 0;
+            obstacleSpeed = 5;
+            scoreDisplay.textContent = 'Score: ' + score;
+            gameOverDisplay.style.display = 'none';
+            restartBtn.style.display = 'none';
+
+            obstacles.forEach(obstacle => {
+                if (obstacle.parentNode) {
+                    obstacle.parentNode.removeChild(obstacle);
+                }
+            });
+            obstacles = [];
+
+            obstacleInterval = setInterval(() => {
+                createObstacle();
+                // Increase difficulty gradually
+                if (obstacleSpeed < 15) {
+                    obstacleSpeed += 0.1;
+                }
+            }, 1500);
+
+            scoreInterval = setInterval(() => {
+                if (!isGameOver) {
+                    score++;
+                    scoreDisplay.textContent = 'Score: ' + score;
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestScoreDisplay.textContent = 'Best Score: ' + bestScore;
+                    }
+                }
+            }, 100);
+        }
+
+        function endGame() {
+            // For infinite mode, do not stop the game on collision
+            // Instead, reset obstacles and continue
+            obstacles.forEach(obstacle => {
+                if (obstacle.parentNode) {
+                    obstacle.parentNode.removeChild(obstacle);
+                }
+            });
+            obstacles = [];
+            obstacleSpeed = 5; // reset speed
+            score = 0; // reset score
+            scoreDisplay.textContent = 'Score: ' + score;
+            // Optionally, flash game over message briefly
+            gameOverDisplay.style.display = 'block';
+            setTimeout(() => {
+                gameOverDisplay.style.display = 'none';
+            }, 1000);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                if (isGameOver) {
+                    startGame();
+                } else {
+                    jump();
+                }
+            }
+        });
+
+        restartBtn.addEventListener('click', () => {
+            startGame();
+        });
+
+        // Start the game initially
+        startGame();
+    </script>
+</body>
+</html>
